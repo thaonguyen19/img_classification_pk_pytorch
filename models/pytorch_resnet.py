@@ -144,13 +144,6 @@ class ResNet(nn.Module):
 
         return blocks
 
-    # def set_test_dr(self, test_death_rate):
-    #     self.test_death_rate = test_death_rate
-    #     print ("Setting test death rates to " + str(test_death_rate)) 
-
-    # def get_section_reps(self):
-    #     return model.section_reps
-
     def forward(self, x):
         x = self.conv1(x)
         x = self.bn1(x)

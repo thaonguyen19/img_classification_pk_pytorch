@@ -70,10 +70,6 @@ def main():
                 if name in vars(args) and name in vars(old_args):
                     setattr(args, name, getattr(old_args, name))
             model = getModel(**vars(args))
-            print ("ending resuming")
-
-            # nonparallel_dict = {k[7:]: checkpoint['state_dict'][k] for k in checkpoint['state_dict'].keys()}
-            # model.load_state_dict(nonparallel_dict)
             model.load_state_dict(checkpoint['state_dict'])
             print("=> loaded checkpoint '{}' (epoch {})"
                   .format(args.resume, checkpoint['epoch']))
@@ -145,7 +141,7 @@ def main():
                 for row in rows:
                     writer.writerow(row)
         return
-        
+
     else:
         train_loader, val_loader, _ = getDataloaders(
             splits=('train', 'val'), **vars(args))
