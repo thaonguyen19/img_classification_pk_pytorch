@@ -13,6 +13,11 @@ class Trainer(object):
         self.criterion = criterion
         self.optimizer = optimizer
         self.args = args
+        # if args.arch.startswith('alexnet') or args.arch.startswith('vgg'):
+        #     self.model.features = torch.nn.DataParallel(self.model.features)
+        #     self.model.cuda()
+        # else:
+        #     self.model = torch.nn.DataParallel(self.model).cuda()
 
     def train(self, train_loader, epoch):
         batch_time = AverageMeter()

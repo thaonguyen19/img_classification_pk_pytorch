@@ -6,6 +6,7 @@ from __future__ import absolute_import
 
 import os
 import sys
+import csv
 
 import torch
 import torch.nn as nn
@@ -49,26 +50,30 @@ def main():
     if configure is None:
         args.tensorboard = False
         print(Fore.RED +
-              'WARNING: you don\'t have tesnorboard_logger installed' +
+              'WARNING: you don\'t have tensorboard_logger installed' +
               Fore.RESET)
 
     # optionally resume from a checkpoint
     if args.resume:
         if args.resume and os.path.isfile(args.resume):
             print("=> loading checkpoint '{}'".format(args.resume))
+            global checkpoint
             checkpoint = torch.load(args.resume)
             old_args = checkpoint['args']
-            print('Old args:')
-            print(old_args)
             # set args based on checkpoint
             if args.start_epoch <= 0:
                 args.start_epoch = checkpoint['epoch'] + 1
             best_epoch = args.start_epoch - 1
             best_err1 = checkpoint['best_err1']
-            for name in arch_resume_names:
+            for name in arch_resume_names: 
+            #['arch', 'depth', 'death_mode', 'death_rate', 'growth_rate', 'bn_size', 'compression']
                 if name in vars(args) and name in vars(old_args):
                     setattr(args, name, getattr(old_args, name))
             model = getModel(**vars(args))
+            print ("ending resuming")
+
+            # nonparallel_dict = {k[7:]: checkpoint['state_dict'][k] for k in checkpoint['state_dict'].keys()}
+            # model.load_state_dict(nonparallel_dict)
             model.load_state_dict(checkpoint['state_dict'])
             print("=> loaded checkpoint '{}' (epoch {})"
                   .format(args.resume, checkpoint['epoch']))
@@ -87,7 +92,7 @@ def main():
 
     cudnn.benchmark = True
 
-    # define loss function (criterion) and pptimizer
+    # define loss function (criterion) and optimizer
     criterion = nn.CrossEntropyLoss().cuda()
 
     # define optimizer
@@ -110,8 +115,37 @@ def main():
     elif args.evaluate == 'test':
         _, _, test_loader = getDataloaders(
             splits=('test'), **vars(args))
-        trainer.test(test_loader, best_epoch)
+        if args.test_death_mode == 'none':
+            trainer.test(test_loader, best_epoch)
+        else:
+            print ("Stochastic depth testing...")
+            nblocks = (args.depth - 2) // 2
+            n = (args.depth - 2) // 6 
+            section_reps=[n]*3
+            all_top1 = []
+
+            for n in range(0, nblocks): #drop 0, 1, 2, ..., nblocks-1 blocks
+                print ("Dropping " + str(n)+ " blocks")
+                death_rates_list = [0]*(nblocks-n) + [1]*n
+                test_death_rate = []
+                count = 0
+                for i in range(len(section_reps)):
+                    test_death_rate.append(death_rates_list[count:(count+section_reps[i])])
+                    count += section_reps[i]
+                model = getModel(test_death_rate=test_death_rate, **vars(args))
+                model.load_state_dict(checkpoint['state_dict'])
+                optimizer = get_optimizer(model, args)
+                trainer = Trainer(model, criterion, optimizer, args)
+                _, top1, _ = trainer.test(test_loader, best_epoch)
+                all_top1.append(top1)
+
+            with open(args.resume.split('/')[1]+'.csv','w') as f:
+                writer = csv.writer(f)
+                rows = zip(range(0, nblocks), all_top1)
+                for row in rows:
+                    writer.writerow(row)
         return
+        
     else:
         train_loader, val_loader, _ = getDataloaders(
             splits=('train', 'val'), **vars(args))

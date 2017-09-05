@@ -64,6 +64,11 @@ arch_group.add_argument('--death-mode', default='none',
                         help='death mode (default: none)')
 arch_group.add_argument('--death-rate', default=0.5, type=float,
                         help='death rate rate (default: 0.5)')
+
+arch_group.add_argument('--test-death-mode', default='none',
+                        choices=['none', 'stoch'],
+                        help='death mode when testing(default: none)')
+
 arch_group.add_argument('--growth-rate', default=12, type=int,
                         metavar='GR', help='Growth rate of DenseNet'
                         ' (1 means dot\'t use compression) (default: 0.5)')
