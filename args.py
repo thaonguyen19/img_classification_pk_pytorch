@@ -66,8 +66,10 @@ arch_group.add_argument('--death-rate', default=0.5, type=float,
                         help='death rate rate (default: 0.5)')
 
 arch_group.add_argument('--test-death-mode', default='none',
-                        choices=['none', 'stoch'],
+                        choices=['none', 'stoch', 'stoch_random'],
                         help='death mode when testing(default: none)')
+arch_group.add_argument('--retrain', default=False, type=bool,
+                        help='fine-tuning after dropping some blocks')
 
 arch_group.add_argument('--growth-rate', default=12, type=int,
                         metavar='GR', help='Growth rate of DenseNet'

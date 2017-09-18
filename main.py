@@ -7,6 +7,7 @@ from __future__ import absolute_import
 import os
 import sys
 import csv
+import random
 
 import torch
 import torch.nn as nn
@@ -118,28 +119,52 @@ def main():
             nblocks = (args.depth - 2) // 2
             n = (args.depth - 2) // 6 
             section_reps=[n]*3
-            all_top1 = []
 
-            for n in range(0, nblocks): #drop 0, 1, 2, ..., nblocks-1 blocks
-                print ("Dropping " + str(n)+ " blocks")
-                death_rates_list = [0]*(nblocks-n) + [1]*n
-                test_death_rate = []
-                count = 0
-                for i in range(len(section_reps)):
-                    test_death_rate.append(death_rates_list[count:(count+section_reps[i])])
-                    count += section_reps[i]
-                model = getModel(test_death_rate=test_death_rate, **vars(args))
-                model.load_state_dict(checkpoint['state_dict'])
-                optimizer = get_optimizer(model, args)
-                trainer = Trainer(model, criterion, optimizer, args)
-                _, top1, _ = trainer.test(test_loader, best_epoch)
-                all_top1.append(top1)
+            if args.test_death_mode == 'stoch':
+                all_top1 = []
+                for n in range(nblocks): #drop 0, 1, 2, ..., nblocks-1 blocks
+                    print ("Dropping " + str(n)+ " blocks")
+                    death_rates_list = [0]*(nblocks-n) + [1]*n
+                    test_death_rate = []
+                    count = 0
+                    for i in range(len(section_reps)):
+                        test_death_rate.append(death_rates_list[count:(count+section_reps[i])])
+                        count += section_reps[i]
+                    model = getModel(test_death_rate=test_death_rate, **vars(args))
+                    model.load_state_dict(checkpoint['state_dict'])
+                    optimizer = get_optimizer(model, args)
+                    trainer = Trainer(model, criterion, optimizer, args)
+                    _, top1, _ = trainer.test(test_loader, best_epoch)
+                    all_top1.append(top1)
 
-            with open(args.resume.split('/')[1]+'.csv','w') as f:
-                writer = csv.writer(f)
-                rows = zip(range(0, nblocks), all_top1)
-                for row in rows:
-                    writer.writerow(row)
+                with open(args.resume.split('/')[1]+'.csv','w') as f:
+                    writer = csv.writer(f)
+                    rows = zip(range(0, nblocks), all_top1)
+                    for row in rows:
+                        writer.writerow(row)
+
+            else: #drop random blocks
+                for n in range(15):
+                    all_top1 = []
+                    print ("Dropping " + str(n)+ " random blocks")
+                    for t in range(5): #randomly remove n blocks for 5 times
+                        random_ind = random.sample(range(nblocks), n)
+                        death_rates_list = [0]*nblocks
+                        for ind in random_ind:
+                            death_rates_list[ind] = 1
+                        test_death_rate = []
+                        count = 0
+                        for i in range(len(section_reps)):
+                            test_death_rate.append(death_rates_list[count:(count+section_reps[i])])
+                            count += section_reps[i]
+                        model = getModel(test_death_rate=test_death_rate, **vars(args))
+                        model.load_state_dict(checkpoint['state_dict'])
+                        optimizer = get_optimizer(model, args)
+                        trainer = Trainer(model, criterion, optimizer, args)
+                        _, top1, _ = trainer.test(test_loader, best_epoch)
+                        all_top1.append(top1)
+                        print ("Min error: " + min(all_top1))
+
         return
 
     else:
