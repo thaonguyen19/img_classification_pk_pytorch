@@ -147,7 +147,7 @@ def main():
                 for n in range(15):
                     all_top1 = []
                     print ("Dropping " + str(n)+ " random blocks")
-                    for t in range(5): #randomly remove n blocks for 5 times
+                    for t in range(10): #randomly remove n blocks for 10 times
                         random_ind = random.sample(range(nblocks), n)
                         death_rates_list = [0]*nblocks
                         for ind in random_ind:
