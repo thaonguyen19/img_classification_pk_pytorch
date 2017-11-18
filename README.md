@@ -1,10 +1,22 @@
-<p align="center"><img width="40%" src="http://i.imgur.com/EMM7Qn2.pngg" /></p>
-
 # Image Classification Project Killer in PyTorch
-This repo is designed for those who want to start their experiments two days before the deadline and kill the project in the last 6 hours. :new_moon_with_face:
-Inspired by [fb.torch.resnet](https://github.com/facebook/fb.resnet.torch),
-it provides fast experiment setup and attempts to maximize the number of projects killed within the given time.
-Please feel free to submit issues or pull requests if you want to contribute.
+I have modified the initial repo (https://github.com/felixgwu/img_classification_pk_pytorch) to add more functionality in terms of stochastic-depth training and testing, the idea that initially came from "Deep Networks with Stochastic Depth" by Huang et al. (https://arxiv.org/pdf/1603.09382.pdf): 
+<ul>
+  <li>Training modes: 
+    <ul>
+      <li>None: Training as normal without stochastic depth</li>
+      <li>Linear: Dropping blocks from training according to a linearly decaying survival probability that gives preference to earlier layers</li>
+      <li>Uniform: Dropping blocks from training according to a uniform survival probability</li>
+    </ul>
+  </li>
+  <li>Testing modes: 
+    <ul>
+      <li>None: Testing as normal without stochastic depth</li>
+      <li>Stochastic: Testing on cases in which we drop 0, 1, ..., (n_blocks-1) blocks at a time from the later layer backwards to earlier layers</li>
+      <li>Stochastic random: For each n between 0 and (n_blocks-1), average the testing results from dropping n random blocks for a few times</li>
+    </ul>
+  </li>
+</ul>
+Therefore, while stochastic-depth training makes model more robust and generalize better (similar effect to drop-out), stochastic-depth testing allows us to test for the presence of redundant blocks in the completely trained model, the removal of which would lead to more compact networks with even higher accuracy.
 
 ## Usage
 Both Python 2.7 and 3.5 are supported; however, it was mainly tested on Python 3.
