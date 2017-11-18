@@ -142,13 +142,13 @@ def main():
                     rows = zip(range(0, nblocks), all_top1)
                     for row in rows:
                         writer.writerow(row)
-
-            else: #drop random blocks
-                for n in range(15):
+            else:
+                for n in range(1, 25):
                     all_top1 = []
                     print ("Dropping " + str(n)+ " random blocks")
-                    for t in range(10): #randomly remove n blocks for 10 times
+                    for t in range(10): #randomly remove n blocks for 5 times
                         random_ind = random.sample(range(nblocks), n)
+                        print (random_ind)
                         death_rates_list = [0]*nblocks
                         for ind in random_ind:
                             death_rates_list[ind] = 1
@@ -163,7 +163,7 @@ def main():
                         trainer = Trainer(model, criterion, optimizer, args)
                         _, top1, _ = trainer.test(test_loader, best_epoch)
                         all_top1.append(top1)
-                        print ("Min error: " + min(all_top1))
+                    print (min(all_top1))
 
         return
 
