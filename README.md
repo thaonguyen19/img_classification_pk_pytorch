@@ -18,6 +18,8 @@ I have modified the initial repo (https://github.com/felixgwu/img_classification
 </ul>
 Therefore, while stochastic-depth training makes model more robust and generalize better (similar effect to drop-out), stochastic-depth testing allows us to test for the presence of redundant blocks in the completely trained model, the removal of which would lead to more compact networks with even higher accuracy.
 
+***Note: this has only been tested with pytorch_resnet option for "models" choice
+
 ## Usage
 Both Python 2.7 and 3.5 are supported; however, it was mainly tested on Python 3.
 Use `python main.py -h` to show all arguments.
