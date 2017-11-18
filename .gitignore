@@ -89,5 +89,6 @@ ENV/
 .ropeproject
 
 # Project Related
+*csv
 save
 data
